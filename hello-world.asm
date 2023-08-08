@@ -1,3 +1,5 @@
+# ciò che comincia con un period (.) è detto direttiva
+
 .data
 msg: .asciiz "\nHello, World!\n"
 

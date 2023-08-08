@@ -4,5 +4,7 @@ Computer's Architecture exercises
 References
 
 syscall: 
-[https://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html]
+[https://peterfab.com/ref/mips/syscalls.html]
 
+ASCII:
+[https://www.ascii-code.com/]
