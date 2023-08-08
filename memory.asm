@@ -8,7 +8,7 @@
 .data 0x10010000 # indirizzo minimo di partenza
 .word 0x24 0x25 # $ %
 .word 0x38 # 8
-msg: .ascii "1234"
+msg: .asciiz "€"
 .byte 0x63 0x69 0x61 0x6f # c i a o
 # Stampa al max fino a 0x7f (DELETE) che non si vede.
 # Trattasi del 127 carattere ASCII, questo per via del fatto che un carattere
@@ -18,9 +18,9 @@ msg: .ascii "1234"
 # Se volessi stampare gli ASCII successivi dovrei sommare i valori nelle UMA
 # basta vedere che msg: .asciiz "123~" non "disallinea" la memoria
 # msg: .asciiz "123€" invece la "disallinea"
-.word 0x7e
-.word 0x7d
-.word 0x82
+.word 0x7e # ~
+.word 0x7d # }
+.word 0x80 # €
 
 .text
 main:
