@@ -1,5 +1,4 @@
 .data 0x10008000
-log: .asciiz "[debug]"
 s: .asciiz "Ciao!"
 EOS: .asciiz ""
 
