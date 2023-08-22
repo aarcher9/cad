@@ -1,6 +1,6 @@
 .data 0x10008000
 array: 
-    .byte 4 1 2 4 1 3 0 9 7 1
+    .byte 4 1 0 4 1 3 0 9 7 1
 counter:
     .byte 0
 start:
@@ -8,7 +8,7 @@ start:
 end:
     .byte 9
 swaps_performed:
-    .byte 0
+    .byte 1
 alert_msg:
     .asciiz "!"
 
@@ -20,15 +20,23 @@ main:
     syscall
 
 # --- Main routine
-print:
+print_item:
     la $t0, array
-    lb $a0, 3($t0)
+    add $t2, $t0, $s0
+    lb $a0, 0($t2)
     li $v0, 1
     syscall
+    addi $s0, $s0, 1
+    lb $t1, end
+    bne $s0, $t1, print_item
     jr $ra
 
+print:
+    move $s0, $zero
+    j print_item
+
 sorting_completed:
-    # jal print
+    jal print
     li $v0, 10
     syscall
 
