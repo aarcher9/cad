@@ -1,10 +1,12 @@
 .data 0x10008000
 array: 
-    .byte 4 1 0 4 1 3 0 9 7 7 9 8 ']'
+    .word 4 1 0 4 1 3 0 9 7 7 9 88 ']'
 counter:
-    .byte 0
+    .word 0
 swaps_performed:
-    .byte 1
+    .word 1
+spacer:
+    .asciiz ", "
 ra_stack:
     .space 20 
 
@@ -21,23 +23,23 @@ exit:
 
 # --- Main routine
 increment_counter:
-    lb $t0, counter
-    addi $t0, $t0, 1
-    sb $t0, counter
+    lw $t0, counter
+    addi $t0, $t0, 4
+    sw $t0, counter
     j sort
 
 load_current_item:
-    lb $t0, counter
+    lw $t0, counter
     la $t1, array
     add $t2, $t1, $t0 
-    lb $v0, 0($t2)
+    lw $v0, 0($t2)
     jr $ra
 
 load_next_item:
-    lb $t0, counter
+    lw $t0, counter
     la $t1, array
     add $t2, $t1, $t0 
-    lb $v0, 1($t2)
+    lw $v0, 4($t2)
     jr $ra
 
 sort:
@@ -56,10 +58,10 @@ sort:
 
 load:
     la $t0, array
-    lb $t1, counter
+    lw $t1, counter
     add $t2, $t0, $t1
-    lb $a0, 0($t2)
-    lb $a1, 1($t2)
+    lw $a0, 0($t2)
+    lw $a1, 4($t2)
     la $a2, 0($t2)
     j compare
 
@@ -73,18 +75,18 @@ load:
             j increment_counter
 
         swap:
-            sb $a0, 1($a2)
-            sb $a1, 0($a2)
+            sw $a0, 4($a2)
+            sw $a1, 0($a2)
             j increment_swaps_performed
 
             increment_swaps_performed:
-                lb $t0, swaps_performed
+                lw $t0, swaps_performed
                 addi $t0, $t0, 1
-                sb $t0, swaps_performed
+                sw $t0, swaps_performed
                 j increment_counter
 
 check_for_termination:
-    lb $t0, swaps_performed
+    lw $t0, swaps_performed
     beqz $t0, sorting_completed
     j reset_counter_and_swaps_performed
 
@@ -93,43 +95,48 @@ check_for_termination:
         j exit
 
     reset_counter_and_swaps_performed:
-        li $t0, -1 # Mi serve perchè lo incremento subito dopo
-        sb $t0, counter
+        li $t0, -4 # Mi serve perchè lo incremento subito dopo
+        sw $t0, counter
         li $t0, 0
-        sb $t0, swaps_performed
+        sw $t0, swaps_performed
         j increment_counter
 
 # Stampa sequenza di byte a schermo
 print:
-    sb $zero, counter
+    sw $zero, counter
     j print_remaining
 
     print_remaining:
         j load_item
 
     load_item:
-        lb $t0, counter
+        lw $t0, counter
         la $t1, array
         add $t2, $t0, $t1
-        lb $a0, 0($t2)
+        lw $a0, 0($t2)
         j log
 
     log:
         li $v0, 1
         syscall
+
+        la $a0, spacer
+        li $v0, 4
+        syscall
+
         j increment_index
 
     increment_index:
-        lb $t0, counter
-        addi $t0, $t0, 1
-        sb $t0, counter
+        lw $t0, counter
+        addi $t0, $t0, 4
+        sw $t0, counter
         j restart_or_terminate
 
     restart_or_terminate:
-        lb $t0, counter
+        lw $t0, counter
         la $t1, array
         add $t2, $t1, $t0 
-        lb $s0, 0($t2)
+        lw $s0, 0($t2)
         
         bne $s0, ']', print_remaining
         jr $ra
