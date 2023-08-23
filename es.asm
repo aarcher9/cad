@@ -1,16 +1,12 @@
 .data 0x10008000
 array: 
-    .byte 4 1 0 4 1 3 0 9 7 1
+    .byte 4 1 0 4 1 3 0 9 7 7 9 8 ']'
 counter:
     .byte 0
-start:
-    .byte 0
-end:
-    .byte 9
 swaps_performed:
     .byte 1
-alert_msg:
-    .asciiz "!"
+ra_stack:
+    .space 20 
 
 .text 0x400000
 main:
@@ -19,44 +15,44 @@ main:
     li $v0, 10
     syscall
 
-# --- Main routine
-print_item:
-    la $t0, array
-    add $t2, $t0, $s0
-    lb $a0, 0($t2)
-    li $v0, 1
-    syscall
-    addi $s0, $s0, 1
-    lb $t1, end
-    bne $s0, $t1, print_item
-    jr $ra
-
-print:
-    move $s0, $zero
-    j print_item
-
-sorting_completed:
-    jal print
+exit:
     li $v0, 10
     syscall
 
-sort:
-    j proceed_or_restart
-
+# --- Main routine
 increment_counter:
     lb $t0, counter
     addi $t0, $t0, 1
     sb $t0, counter
     j sort
 
-proceed_or_restart:
+load_current_item:
     lb $t0, counter
-    lb $t1, end
-    bne $t0, $t1, proceed
-    beq $t0, $t1, restart
+    la $t1, array
+    add $t2, $t1, $t0 
+    lb $v0, 0($t2)
+    jr $ra
 
-proceed:
-    j load
+load_next_item:
+    lb $t0, counter
+    la $t1, array
+    add $t2, $t1, $t0 
+    lb $v0, 1($t2)
+    jr $ra
+
+sort:
+    j proceed_or_restart
+
+    proceed_or_restart:
+        jal load_next_item
+        bne $v0, ']', proceed
+        beq $v0, ']', restart
+
+        proceed:
+            j load
+
+        restart:
+            j check_for_termination
 
 load:
     la $t0, array
@@ -67,39 +63,73 @@ load:
     la $a2, 0($t2)
     j compare
 
-compare: 
-    li $t0, 0
-    sgt $t0, $a0, $a1
-    beqz $t0, dont_swap
-    bnez $t0, swap
+    compare: 
+        li $t0, 0
+        sgt $t0, $a0, $a1
+        beqz $t0, dont_swap
+        bnez $t0, swap
 
-swap:
-    sb $a0, 1($a2)
-    sb $a1, 0($a2)
-    jal increment_swaps_performed
-    j increment_counter
+        dont_swap:
+            j increment_counter
 
-increment_swaps_performed:
-    lb $t0, swaps_performed
-    addi $t0, $t0, 1
-    sb $t0, swaps_performed
-    jr $ra
+        swap:
+            sb $a0, 1($a2)
+            sb $a1, 0($a2)
+            j increment_swaps_performed
 
-dont_swap:
-    j increment_counter
+            increment_swaps_performed:
+                lb $t0, swaps_performed
+                addi $t0, $t0, 1
+                sb $t0, swaps_performed
+                j increment_counter
 
 check_for_termination:
     lb $t0, swaps_performed
     beqz $t0, sorting_completed
-    jr $ra
+    j reset_counter_and_swaps_performed
 
-reset_counter_and_swaps_performed:
-    li $t0, 0
-    sb $t0, counter
-    sb $t0, swaps_performed
-    jr $ra
+    sorting_completed:
+        jal print
+        j exit
 
-restart:
-    jal check_for_termination
-    jal reset_counter_and_swaps_performed
-    j increment_counter
+    reset_counter_and_swaps_performed:
+        li $t0, -1 # Mi serve perchè lo incremento subito dopo
+        sb $t0, counter
+        li $t0, 0
+        sb $t0, swaps_performed
+        j increment_counter
+
+# Stampa sequenza di byte a schermo
+print:
+    sb $zero, counter
+    j print_remaining
+
+    print_remaining:
+        j load_item
+
+    load_item:
+        lb $t0, counter
+        la $t1, array
+        add $t2, $t0, $t1
+        lb $a0, 0($t2)
+        j log
+
+    log:
+        li $v0, 1
+        syscall
+        j increment_index
+
+    increment_index:
+        lb $t0, counter
+        addi $t0, $t0, 1
+        sb $t0, counter
+        j restart_or_terminate
+
+    restart_or_terminate:
+        lb $t0, counter
+        la $t1, array
+        add $t2, $t1, $t0 
+        lb $s0, 0($t2)
+        
+        bne $s0, ']', print_remaining
+        jr $ra
