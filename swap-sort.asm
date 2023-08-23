@@ -1,6 +1,6 @@
 .data 0x10008000
 array: 
-    .word 4 1 0 4 1 3 0 9 7 7 9 88 ']'
+    .word 4 1 110 4 1 3 0 9 7 7 9 88 ']'
 counter:
     .word 0
 swaps_performed:
