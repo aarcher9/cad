@@ -3,6 +3,9 @@
 
 .text 0x400000
 main:
+    # Sembra che abbia a disposizione 24 bit fra esponente e mantissa, escluso segno, quindi 25 bit, gli altri 7 non so per cosa siano usati
+
+    # Qui parte decimale massima e intera o 0 o 1, perche ho finito i bit
     li.s $f12, 0.99999988
     jal print_float
     jal sep
@@ -11,10 +14,12 @@ main:
     jal print_float
     jal sep
 
-    # Non ho piu spazio per i decimali, infatti il numero equivale a 2^24 (la mantissa), l'
-    li.s $f12, 16777216.000000
+    # Qui nessuna parte decimale, ho finito i bit
+    li.s $f12, -16777216.00000
     jal print_float
     jal sep
+
+    # Se infatti provo ad aggiungere, non mi scombina la precisione del numero nei primi due casi, e non succede nulla nel terzo, ovvero arrotonda all'intero vicino
 
     li $v0, 10
     syscall
