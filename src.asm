@@ -1,36 +1,83 @@
 .data 0x10008000
+OPEN_SQUARE_BRACKET: 
+    .word '['
+CLOSE_SQUARE_BRACKET: 
+    .word ']'
+OpenSquareBracketParseError:
+    .asciiz "Error: Missing '['"
+CloseSquareBracketParseError:
+    .asciiz "Error: Missing ']'"
 
+.first_token:
+    .word '0'
+.last_token:
+    .word '0'
+.array_length:
+    .word 0
+.first_token_address:
+    .word 0
+.last_token_address:
+    .word 0
+
+
+a:
+    .word '[' 23 16 166 ']' 
 
 .text 0x400000
 main:
-    # Sembra che abbia a disposizione 24 bit fra esponente e mantissa, escluso segno, quindi 25 bit, gli altri 7 non so per cosa siano usati
-
-    # Qui parte decimale massima e intera o 0 o 1, perche ho finito i bit
-    li.s $f12, 0.99999988
-    jal print_float
-    jal sep
-
-    li.s $f12, 1.99999988
-    jal print_float
-    jal sep
-
-    # Qui nessuna parte decimale, ho finito i bit
-    li.s $f12, -16777216.00000
-    jal print_float
-    jal sep
-
-    # Se infatti provo ad aggiungere, non mi scombina la precisione del numero nei primi due casi, e non succede nulla nel terzo, ovvero arrotonda all'intero vicino
+    la $a0, a
+    li $a1, 3
+    jal array_parse
 
     li $v0, 10
     syscall
 
-sep:
-    li $a0, '\n'
-    li $v0, 11
-    syscall 
+array_parse:
+    # @ $a0: array address
+    # @ $a1: array length
+
+    jal init_data
+
+    # lw $t0, ($a0)
+    # lw $t1, OPEN_SQUARE_BRACKET
+    # bne $t0, $t1, open_bracket_parse_error 
+    
+    # li $t2, 4
+    # addi $a1, $a1, 1
+    # mult $a1, $t2
+    # mflo $a1
+
+    # addi $t0, $a0, 13
+    # lw $t1, CLOSE_SQUARE_BRACKET
+    # bne $t0, $t1, close_bracket_parse_error 
+    # j terminate
+
+init_data:
+    sw $a0, first_tokejn_address
+    sw $a1, array_length
+
+    li $t0, 4
+    mult $a1, $t0
+    mflo $a1
+    add $a1, $a0, $a1
+    sw $a1, last_token_address 
+
     jr $ra
 
-print_float:
-    li $v0, 2
+open_bracket_parse_error:
+    la $a0, OpenSquareBracketParseError
+    li $v0, 4
+    syscall 
+
+    j terminate
+
+close_bracket_parse_error:
+    la $a0, CloseSquareBracketParseError
+    li $v0, 4
+    syscall 
+
+    j terminate
+
+terminate:
+    li $v0, 10
     syscall
-    jr $ra
